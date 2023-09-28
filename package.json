@@ -1,0 +1,20 @@
+{
+  "name": "001-apibooks",
+  "version": "1.0.0",
+  "description": "api for project web",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon server/server.js",
+    "start": "node server/server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mongoose": "^6.10.0",
+    "underscore": "^1.13.6"
+  }
+}
