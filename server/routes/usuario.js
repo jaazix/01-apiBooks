@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 const Usuario = require('../models/usuario');
 const app = express();
+const jwt = require('jsonwebtoken');
 
 app.get('/usuario', function(req, res) {
     let desde = req.query.desde || 0;
@@ -30,11 +31,17 @@ app.get('/usuario', function(req, res) {
 });
 
 app.post('/usuario', function(req, res) {
+    const user = {
+        email: req.body.email,
+        role: "USER_ROLE"
+    }
+    const token = jwt.sign({user},"my_secret_key");
     let body = req.body;
     let usr = new Usuario({
         nombre: body.nombre,
         email: body.email,
-        password: bcrypt.hashSync(body.password, 10)
+        password: bcrypt.hashSync(body.password, 10),
+        token: token
     });
 
     usr.save((err, usrDB) => {

@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const validator = require('validator')
+const jwt = require('jsonwebtoken')
 
 let Schema = mongoose.Schema;
 
@@ -10,7 +12,13 @@ let usuarioSchema = new Schema({
     email: {
         type: String,
         required: [true, 'El correo es necesario'],
-        unique: true
+        unique: true,
+        lowercase: true,
+        validate: value => {
+            if (!validator.isEmail(value)) {
+                throw new Error({error: 'Invalid Email address'})
+            }
+        }
     },
     password: {
         type: String, 
@@ -27,6 +35,10 @@ let usuarioSchema = new Schema({
     estado: {
         type: Boolean,
         default: true
+    },
+    token: {
+        type: String,
+        required: true
     }
 });
 
