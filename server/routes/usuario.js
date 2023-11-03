@@ -5,29 +5,44 @@ const Usuario = require('../models/usuario');
 const app = express();
 const jwt = require('jsonwebtoken');
 
-app.get('/usuario', function(req, res) {
+app.post('/usuario/list', verifyToken,(req, res) => {
     let desde = req.query.desde || 0;
-    let hasta = req.query.hasta || 5;
+    let hasta = req.query.hasta || 5; 
 
-    Usuario.find({ estado: true })
-        .skip(Number(desde))
-        .limit(Number(hasta))
-        .exec((err, usuarios) => {
-            if (err) {
-                return res.status(400).json({
-                    ok: false,
-                    msg: 'Ocurrio un error al momento de consultar',
-                    err
-                });
-            }
+    jwt.verify(req.token, "my_secret_key", (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            if(authData.user.role == "ADMIN"){
+                Usuario.find({ estado: true })
+                .skip(Number(desde))
+                .limit(Number(hasta))
+                .exec((err, usuarios) => {
+                    if (err) {
+                        return res.status(400).json({
+                            ok: false,
+                            msg: 'Ocurrio un error al momento de consultar',
+                            err
+                        });
+                    }
+        
+                    res.json({
+                        ok: true,
+                        msg: 'Lista de usuarios obtenida con exito',
+                        conteo: usuarios.length,
+                        usuarios
+                    });
+                });}
+                else{
+                    return res.status(400).json({
+                        ok: false,
+                        msg: 'No tienes permisos para realizar esta operacion',
+                        err
+                    });
+                }
+        }
+    });
 
-            res.json({
-                ok: true,
-                msg: 'Lista de usuarios obtenida con exito',
-                conteo: usuarios.length,
-                usuarios
-            });
-        });
 });
 
 app.post('/usuario', function(req, res) {
@@ -120,5 +135,19 @@ app.delete('/usuario/:id', function(req, res) {
         });
     });
 });
+
+function verifyToken(req, res, next) {
+    const bearerHeader = req.headers['authorization'];
+
+    if (typeof bearerHeader !== 'undefined') {
+        const bearerToken = bearerHeader.split(' ')[1];
+        req.token = bearerToken;
+        next();
+    } else {
+        res.sendStatus(403).json({
+            message: 'Token not provided'
+        }); 
+    }
+}
 
 module.exports = app;
