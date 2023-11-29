@@ -21,6 +21,8 @@ app.get('/', function (req, res) {
 
 app.use(require('./routes/login'));
 app.use(require('./routes/usuario'));
+app.use(require('./routes/chat'));
+app.use(require('./routes/suma'));
 
  mongoose.connect('mongodb+srv://admin:password_server20@cluster0.nckh7.mongodb.net/books', {
     useNewUrlParser: true,

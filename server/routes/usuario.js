@@ -5,6 +5,7 @@ const Usuario = require('../models/usuario');
 const app = express();
 const jwt = require('jsonwebtoken');
 
+
 app.post('/usuario/list', verifyToken,(req, res) => {
     let desde = req.query.desde || 0;
     let hasta = req.query.hasta || 5; 
