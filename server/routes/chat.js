@@ -1,5 +1,4 @@
 const express = require('express');
-require('../config');
 const { TextServiceClient } = require("@google-ai/generativelanguage").v1beta2;
 const { GoogleAuth } = require("google-auth-library");
 const translator = require('@parvineyvazov/json-translator');
