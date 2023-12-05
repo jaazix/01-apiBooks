@@ -63,7 +63,7 @@ app.post('/usuario', function(req, res) {
         });
     }
     let usr = new Usuario({
-        nombre: body.nombre,
+        name: body.nombre,
         email: body.email,
         password: bcrypt.hashSync(body.password, 10),
         token: token
