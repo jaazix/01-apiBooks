@@ -58,7 +58,7 @@ app.post('/usuario', function(req, res) {
     if(!validatePassword(body.password)){
         return res.status(400).json({
             ok: false,
-            msg: 'Contraseña Invalida'
+            msg: 'Contraseña Invalida: La contraseña debe tener al menos 8 caracteres \n Debe contener al menos una letra minúscula.Debe contener al menos una letra mayúscula. \n Debe contener al menos un número. \n No debe contener números consecutivos. \n Ni debe contener letras consecutivas.'
         });
     }
     let usr = new Usuario({
