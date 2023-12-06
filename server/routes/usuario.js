@@ -85,6 +85,13 @@ app.post('/usuario', function(req, res) {
 
     usr.save((err, usrDB) => {
         if (err) {
+            if(err.code == 11000){
+                return res.status(400).json({
+                    ok: false,
+                    msg: 'El correo en uso, recupera tu contraseña si la has olvidado',
+                    err
+                });   
+            }
             return res.status(400).json({
                 ok: false,
                 msg: 'Ocurrio un error',
