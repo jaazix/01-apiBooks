@@ -55,15 +55,6 @@ app.post('/usuario', function(req, res) {
     }
     const token = jwt.sign({user},process.env.JWT_KEY);
     let body = req.body;
-
-    Usuario.findOne({ email: body.email }, (err, usrDB) => {
-        if (usrDB) {
-            return res.status(400).json({
-                ok: false,
-                msg: 'El correo ya se encuentra en uso recupera tu contraseña si la olvidaste'
-            });
-        }
-    });
     
     if(!validatePassword(body.password)){
         return res.status(400).json({
