@@ -58,8 +58,7 @@ app.post('/usuario', function(req, res) {
     if(!validatePassword(body.password)){
         return res.status(400).json({
             ok: false,
-            msg: 'Contraseña Invalida',
-            err
+            msg: 'Contraseña Invalida'
         });
     }
     let usr = new Usuario({
