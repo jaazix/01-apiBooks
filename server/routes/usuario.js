@@ -55,22 +55,27 @@ app.post('/usuario', function(req, res) {
     }
     const token = jwt.sign({user},process.env.JWT_KEY);
     let body = req.body;
+
     if(!validatePassword(body.password)){
         return res.status(400).json({
             ok: false,
-            msg: 'Contraseña Invalida',
-            err
+            msg: `Contraseña Invalida: 
+            La contraseña debe tener al menos 8 caracteres 
+            Debe contener al menos una letra minúscula.Debe contener al menos una letra mayúscula.
+            Debe contener al menos un número. <br> No debe contener números consecutivos.
+            Ni debe contener letras consecutivas.`
         });
     }
     let usr = new Usuario({
-        nombre: body.nombre,
+        name: body.nombre,
         email: body.email,
         password: bcrypt.hashSync(body.password, 10),
-        token: token
+        token: token,
+        termsConformity: body.terms
     });
 
-    const mail = htmlTemplate(token);
 
+    const mail = htmlTemplate(token);
     const mailData = {
         from: process.env.CORREO,  // sender address
             to: body.email,   // list of receivers
@@ -81,6 +86,13 @@ app.post('/usuario', function(req, res) {
 
     usr.save((err, usrDB) => {
         if (err) {
+            if(err.code == 11000){
+                return res.status(400).json({
+                    ok: false,
+                    msg: 'El correo en uso, recupera tu contraseña si la has olvidado',
+                    err
+                });   
+            }
             return res.status(400).json({
                 ok: false,
                 msg: 'Ocurrio un error',

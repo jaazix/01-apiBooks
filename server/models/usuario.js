@@ -44,6 +44,10 @@ let usuarioSchema = new Schema({
     verify: {
         type: Boolean,
         default: false
+    },
+    termsConformity: {
+        type: Boolean,
+        required:true
     }
 });
 
