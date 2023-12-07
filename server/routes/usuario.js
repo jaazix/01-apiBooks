@@ -55,6 +55,7 @@ app.post('/usuario', function(req, res) {
     }
     const token = jwt.sign({user},process.env.JWT_KEY);
     let body = req.body;
+    
 
     if(!validatePassword(body.password)){
         return res.status(400).json({
