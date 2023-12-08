@@ -274,7 +274,7 @@ function recoverTemplate(token){
 }
 
 function htmlTemplate(token){
-    const url = 'https://01-apibooks-production.up.railway.app/usuario/'
+    const url = 'https://01-apibooks-production.up.railway.app/usuario'
     return `<!DOCTYPE html>
     <html>
         <head>

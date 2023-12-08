@@ -226,7 +226,9 @@ app.get('/usuario/validate/:token', function(req, res) {
                         </div>
                       </div>
                     </div>
-                  </section>`
+                  </section>
+                  <link rel="stylesheet" href="https://unpkg.com/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+                  <link rel="stylesheet" href="https://unpkg.com/bs-brain@2.0.3/components/contacts/contact-1/assets/css/contact-1.css" />`
                 );
             });
         }
