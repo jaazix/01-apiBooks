@@ -4,12 +4,10 @@ const _ = require('underscore');
 const Usuario = require('../models/usuario');
 const app = express();
 const jwt = require('jsonwebtoken');
-const {transporter, htmlTemplate} = require('../config/mailer.config');
+const {transporter, htmlTemplate, recoverTemplate } = require('../config/mailer.config');
 
 // list users
-app.post('/usuario/list', verifyToken,(req, res) => {
-    let desde = req.query.desde || 0;
-    let hasta = req.query.hasta || 5; 
+app.post('/usuario/list', verifyToken,(req, res) => { 
 
     jwt.verify(req.token, "my_secret_key", (err, authData) => {
         if (err) {
@@ -17,8 +15,6 @@ app.post('/usuario/list', verifyToken,(req, res) => {
         } else {
             if(authData.user.role == "ADMIN"){
                 Usuario.find({ estado: true })
-                .skip(Number(desde))
-                .limit(Number(hasta))
                 .exec((err, usuarios) => {
                     if (err) {
                         return res.status(400).json({
@@ -160,6 +156,49 @@ app.delete('/usuario/:id', function(req, res) {
     });
 });
 
+// recover password
+app.post('/usuario/recover', function(req, res) {
+    let body = req.body;
+
+    Usuario.findOne({ email: body.email }, (err, usrDB) => {
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'Ocurrio un error al momento de recuperar',
+                err
+            });
+        }
+
+        if (!usrDB) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'Mail incorrecto o inexistente, intentelo de nuevo'
+            });
+        }
+
+        const mail = recoverTemplate(usrDB.token);
+
+        const mailData = {
+            from: process.env.CORREO,  // sender address
+                to: body.email,   // list of receivers
+                subject: 'Recover your password',
+                text: '',
+                html: mail
+            }
+        transporter.sendMail(mailData,(error, info)=>{
+            if(error){
+                return console.log(error)
+            }
+        })
+
+        res.json({
+            ok: true,
+            msg: 'Usuario recuperado con exito',
+            usrDB
+        });
+    });
+});
+
 // validate mail
 app.get('/usuario/validate/:token', function(req, res) {
     let token = req.params.token;
@@ -175,11 +214,20 @@ app.get('/usuario/validate/:token', function(req, res) {
                         err
                     });
                 }
-                res.json({
-                    ok: true,
-                    msg: 'Usuario validado con exito',
-                    usrDB
-                });
+                res.send(
+                    `<section class="bg-light py-3 py-md-5">
+                    <div class="container">
+                      <div class="row justify-content-md-center">
+                        <div class="col-12 col-md-10 col-lg-8 col-xl-7 col-xxl-6">
+                          <h2 class="mb-4 display-5 text-center">Congratulations</h2>
+                          <p class="text-secondary mb-5 text-center">Your Account has Been Successfully Verified
+                          .</p>
+                          <hr class="w-50 mx-auto mb-5 mb-xl-9 border-dark-subtle">
+                        </div>
+                      </div>
+                    </div>
+                  </section>`
+                );
             });
         }
     });

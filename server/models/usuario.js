@@ -48,6 +48,10 @@ let usuarioSchema = new Schema({
     termsConformity: {
         type: Boolean,
         required:true
+    },
+    failedAttempts: {
+        type: Number,
+        default: 0
     }
 });
 
