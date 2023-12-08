@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
     });
 
 function recoverTemplate(token){
-    const url = 'https://jaazix.github.io/001-books/#/'
+    const url = 'https://jaazix.github.io/001-books/#'
     return `<!DOCTYPE html>
     <html>
         <head>
