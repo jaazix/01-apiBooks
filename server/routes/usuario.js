@@ -5,11 +5,12 @@ const Usuario = require('../models/usuario');
 const app = express();
 const jwt = require('jsonwebtoken');
 const {transporter, htmlTemplate, recoverTemplate } = require('../config/mailer.config');
+const usuario = require('../models/usuario');
 
 // list users
 app.post('/usuario/list', verifyToken,(req, res) => { 
 
-    jwt.verify(req.token, "my_secret_key", (err, authData) => {
+    jwt.verify(req.token, process.env.JWT_KEY, (err, authData) => {
         if (err) {
             res.sendStatus(403);
         } else {
@@ -42,7 +43,6 @@ app.post('/usuario/list', verifyToken,(req, res) => {
     });
 
 });
-
 // register user
 app.post('/usuario', function(req, res) {
     const user = {
@@ -110,7 +110,6 @@ app.post('/usuario', function(req, res) {
         });
     });
 });
-
 // update user
 app.put('/usuario/:token', function(req, res) {
     let id = req.params.token;
@@ -133,7 +132,6 @@ app.put('/usuario/:token', function(req, res) {
             });
         });
 });
-
 // desactivate user
 app.delete('/usuario/:id', function(req, res) {
 
@@ -155,7 +153,6 @@ app.delete('/usuario/:id', function(req, res) {
         });
     });
 });
-
 // recover password
 app.post('/usuario/recover', function(req, res) {
     let body = req.body;
@@ -198,7 +195,6 @@ app.post('/usuario/recover', function(req, res) {
         });
     });
 });
-
 // validate mail
 app.get('/usuario/validate/:token', function(req, res) {
     let token = req.params.token;
@@ -215,26 +211,184 @@ app.get('/usuario/validate/:token', function(req, res) {
                     });
                 }
                 res.send(
-                    `<section class="bg-light py-3 py-md-5">
-                    <div class="container">
-                      <div class="row justify-content-md-center">
-                        <div class="col-12 col-md-10 col-lg-8 col-xl-7 col-xxl-6">
-                          <h2 class="mb-4 display-5 text-center">Congratulations</h2>
-                          <p class="text-secondary mb-5 text-center">Your Account has Been Successfully Verified
-                          .</p>
-                          <hr class="w-50 mx-auto mb-5 mb-xl-9 border-dark-subtle">
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-                  <link rel="stylesheet" href="https://unpkg.com/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
-                  <link rel="stylesheet" href="https://unpkg.com/bs-brain@2.0.3/components/contacts/contact-1/assets/css/contact-1.css" />`
+                    `<!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Document</title>
+                        <link rel="stylesheet" href="https://unpkg.com/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+                        <link rel="stylesheet" href="https://unpkg.com/bs-brain@2.0.3/components/contacts/contact-1/assets/css/contact-1.css" />
+                    </head>
+                    <body>
+                        <section class="bg-light py-3 py-md-5">
+                            <div class="container">
+                              <div class="row justify-content-md-center">
+                                <div class="col-12 col-md-10 col-lg-8 col-xl-7 col-xxl-6">
+                                  <h2 class="mb-4 display-5 text-center">Congratulations</h2>
+                                  <p class="text-secondary mb-5 text-center">Your Account has Been Successfully Verified
+                                  .</p>
+                                  <hr class="w-50 mx-auto mb-5 mb-xl-9 border-dark-subtle">
+                                </div>
+                              </div>
+                            </div>
+                          </section>
+                    </body>
+                    </html>`
                 );
             });
         }
     });
 });
+// change password
+app.put('usuario/recover', function(req, res){
+    let body = req.body;
+    
+    if(!validatePassword(body.password)){
+        return res.status(400).json({
+            ok: false,
+            msg: `Contraseña Invalida: 
+            La contraseña debe tener al menos 8 caracteres 
+            Debe contener al menos una letra minúscula.Debe contener al menos una letra mayúscula.
+            Debe contener al menos un número. <br> No debe contener números consecutivos.
+            Ni debe contener letras consecutivas.`
+        });
+    }
+    
+    jwt.verify(body.token, process.env.JWT_KEY, (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            usuario.findOneAndUpdate({ token: body.token }, { password: bcrypt.hashSync(body.password, 10) }, 
+            { new: true, runValidators: true, context: 'query' }, (err, usrDB) => {
+                if (err) {
+                    return res.status(400).json({
+                        ok: false,
+                        msg: 'Ocurrio un error al momento de validar',
+                        err
+                    });
+                }
+                res.json({
+                    ok: true,
+                    msg: 'Usuario actualizado con exito',
+                    usrDB
+                });
+            })
+        }
+    });
+})
+// change role
+app.post('/usuario/role', function(req, res) {
+    const body = req.body;
 
+    jwt.verify(body.token, process.env.JWT_KEY, (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            if(authData.user.role == "ADMIN"){
+                const user = {
+                    email: body.email,
+                    role: body.role
+                }
+                const token = jwt.sign({user},process.env.JWT_KEY);
+                Usuario.findOneAndUpdate({ email: body.email }, { role: body.role, token:token }, { new: true, runValidators: true, context: 'query' }, (err, usrDB) => {
+                    if (err) {
+                        return res.status(400).json({
+                            ok: false,
+                            msg: 'Ocurrio un error al momento de actualizar',
+                            err
+                        });
+                    }
+        
+                    res.json({
+                        ok: true,
+                        msg: 'Usuario actualizado con exito',
+                        usrDB
+                    });
+                });
+            }
+                else{
+                    return res.status(400).json({
+                        ok: false,
+                        msg: 'No tienes permisos para realizar esta operacion',
+                        err
+                    });
+                }
+        }
+    });
+});
+// lock user
+app.put('/usuario/lock', verifyToken, function(req, res) {
+    const body = req.body;
+
+    jwt.verify(body.token, process.env.JWT_KEY, (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            if(authData.user.role == "ADMIN"){
+                Usuario.findOneAndUpdate({ email: body.email }, { estado: false }, { new: true, runValidators: true, context: 'query' }, (err, usrDB) => {
+                    if (err) {
+                        return res.status(400).json({
+                            ok: false,
+                            msg: 'Ocurrio un error al momento de actualizar',
+                            err
+                        });
+                    }
+        
+                    res.json({
+                        ok: true,
+                        msg: 'Usuario actualizado con exito',
+                        usrDB
+                    });
+                });
+            }
+                else{
+                    return res.status(400).json({
+                        ok: false,
+                        msg: 'No tienes permisos para realizar esta operacion',
+                        err
+                    });
+                }
+        }
+    });
+});
+// unlock user
+app.put('/usuario/unlock', verifyToken, function(req, res) {
+    const body = req.body;
+
+    jwt.verify(body.token, process.env.JWT_KEY, (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            if(authData.user.role == "ADMIN"){
+                Usuario.findOneAndUpdate({ email: body.email }, { estado: true }, { new: true, runValidators: true, context: 'query' }, (err, usrDB) => {
+                    if (err) {
+                        return res.status(400).json({
+                            ok: false,
+                            msg: 'Ocurrio un error al momento de actualizar',
+                            err
+                        });
+                    }
+        
+                    res.json({
+                        ok: true,
+                        msg: 'Usuario actualizado con exito',
+                        usrDB
+                    });
+                });
+            }
+                else{
+                    return res.status(400).json({
+                        ok: false,
+                        msg: 'No tienes permisos para realizar esta operacion',
+                        err
+                    });
+                }
+        }
+    });
+});
+
+// functions
 function verifyToken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
 
