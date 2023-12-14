@@ -52,7 +52,11 @@ let usuarioSchema = new Schema({
     failedAttempts: {
         type: Number,
         default: 0
-    }
+    },
+    bio:{
+        type: String,
+        default: ''
+    },
 });
 
 module.exports = mongoose.model('Usuario',usuarioSchema);
